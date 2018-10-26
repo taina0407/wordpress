@@ -9,10 +9,33 @@ RUN set -ex; \
 	apt-get install -y --no-install-recommends \
 		libjpeg-dev \
 		libpng-dev \
+		libmemcached-dev \
+		zlib1g-dev \
+		unzip \
+		libssl-dev \
+		libpcre3 \
+		libpcre3-dev \
+		libtidy-dev \
 	; \
+	\
+	pecl install redis-4.0.1; \
+	pecl install memcached-3.0.4; \
 	\
 	docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr; \
 	docker-php-ext-install gd mysqli opcache zip; \
+	\
+	docker-php-ext-install tidy; \
+	docker-php-ext-enable redis memcached; \
+	\
+# Install needed php extensions: memcache
+	cd /usr/src/php/ext/ && \
+    curl -sSL -o php7.zip https://github.com/websupport-sk/pecl-memcache/archive/NON_BLOCKING_IO_php7.zip && \
+    unzip php7.zip && \
+    mv pecl-memcache-NON_BLOCKING_IO_php7 memcache && \
+    docker-php-ext-configure memcache --with-php-config=/usr/local/bin/php-config && \
+    docker-php-ext-install memcache && \
+    echo "extension=memcache.so" > /usr/local/etc/php/conf.d/ext-memcache.ini && \
+    rm -rf /tmp/pecl-memcache-php7 php7.zip \
 	\
 # reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
 	apt-mark auto '.*' > /dev/null; \
@@ -39,7 +62,7 @@ RUN { \
 		echo 'opcache.enable_cli=1'; \
 	} > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
-RUN a2enmod rewrite expires
+RUN a2enmod rewrite expires headers ext_filter
 
 VOLUME /var/www/html
 

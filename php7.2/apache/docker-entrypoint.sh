@@ -265,4 +265,6 @@ EOPHP
 	done
 fi
 
+ln -sfn /var/www/html/ /var/www/html/hoi-dap
+
 exec "$@"
